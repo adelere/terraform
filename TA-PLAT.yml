@@ -1,0 +1,45 @@
+trigger:
+  enabled: false
+pool:
+  vmImage: 'ubuntu-latest'
+variables:
+- name: azureSubscription
+  value: TFconnection
+- name: location
+  value: USGov Virginia
+stages:
+- stage: TerraformDeployment
+  jobs:
+  - job: Terraform
+    steps:
+    - task: 6d15af64-176c-496d-b583-fd2ae21d4df4@1
+      inputs:
+        repository: self
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: '1.9.0'
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        backendAzureRmUseEntraIdForAuthentication: false
+        backendServiceArm: 'TFconnection'
+        backendAzureRmResourceGroupName: 'ta-plat-nonprod-azgv-rg-devops-01'
+        backendAzureRmStorageAccountName: 'taplatazgvsaapptf'
+        backendAzureRmContainerName: 'tf-statefile'
+        backendAzureRmKey: 'terraform_build_pipeline'
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        environmentServiceNameAzureRM: 'TFconnection'
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        environmentServiceNameAzureRM: 'TFconnection'
+
